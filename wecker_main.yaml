@@ -1,0 +1,303 @@
+# Enable Home Assistant API
+api:
+  encryption:
+    key: "ZuvGKLc97eXGrG4Ci4/BWrEzEY/NG4Ldtrf7I6Eqfpc="
+
+ota:
+  password: "xxx"
+#configure wifi connection
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+
+  # Enable fallback hotspot (captive portal) in case wifi connection fails
+  ap:
+    ssid: "Wecker Fallback Hotspot"
+    password: "c430deHzjj9l"
+
+captive_portal:
+    
+
+
+#import sensors
+
+sensor:
+#initialize DHT11 temperature sensor
+  - platform: dht
+    pin: GPIO21
+    temperature:
+      name: "Raumtemperatur"
+      id: room_temperature
+    humidity:
+      name: "Luftfeuchtigkeit"
+      id: room_humidity
+    update_interval: 30s
+    model: DHT11
+#initialize analog input for foto ressistor
+  - platform: adc
+    id: foto_resistor
+    name: "Fotowiederstand"
+    pin: GPIO35
+    attenuation: 11db
+    update_interval: 10s
+#import current outdoor temperature from home assistant weather forecast
+  - platform: homeassistant
+    id: forecast_temperature
+    entity_id: weather.forecast_home
+    attribute: temperature
+
+binary_sensor:
+#initialize IR display proximity sensor
+  - platform: gpio
+    pin: GPIO21
+    name: "Display"
+    on_press:       #play "Mario Theme" on the piezo for debugging
+      then:
+        - rtttl.play: 'mario:d=4,o=5,b=100:16e6,16e6,32p,8e6,16c6,8e6,8g6,8p,8g,8p,8c6,16p,8g,16p,8e,16p,8a,8b,16a#,8a,16g.,16e6,16g6,8a6,16f6,8g6,8e6,16c6,16d6,8b,16p,8c6,16p,8g,16p,8e,16p,8a,8b,16a#,8a,16g.,16e6,16g6,8a6,16f6,8g6,8e6,16c6,16d6,8b,8p,16g6,16f#6,16f6,16d#6,16p,16e6,16p,16g#,16a,16c6,16p,16a,16c6,16d6,8p,16g6,16f#6,16f6,16d#6,16p,16e6,16p,16c7,16p,16c7,16c7,p,16g6,16f#6,16f6,16d#6,16p,16e6,16p,16g#,16a,16c6,16p,16a,16c6,16d6,8p,16d#6,8p,16d6,8p,16c6'
+    filters:
+      - invert:     #invert the input state
+
+
+text_sensor:
+#import the current weather from home assistant waether forecast as a string
+  - platform: homeassistant
+    id: forecast
+    name: "Weather Forecast From Home Assistant"
+    entity_id: weather.forecast_home
+#import the sun's position (above/underneath horizon)
+  - platform: homeassistant
+    id: sun
+    name: "Horizon From Home Assistant"
+    entity_id: sun.sun
+
+switch:
+#initialize UI trigger from home assistant as placeholder
+  - platform: template
+    name: "Alarm"
+    id: alarm_clock
+    optimistic: true
+    turn_on_action:               #alarm function of the clock
+      - light.turn_on:            #turn on underbody LED's with pulse effect
+          id: pixel_strip
+          effect: "Fast Pulse"
+      - rtttl.play: 'alarm:d=2,o=5,b=100:f,4p,f,4p,f,4p,f,4p,f,4p,f,4p,f,4p,f,4p'  #play alarm sound on the piezo
+    turn_off_action:              #turn off action to stop the alarm
+      - light.turn_off:           #turn off underbody LED's
+          id: pixel_strip
+      - rtttl.stop                #turn off piezo output
+
+
+button:
+  - platform: template
+    name: "Mario"
+    on_press:
+      then:
+        - logger.log: Button Pressed
+        - rtttl.play: 'mario:d=4,o=5,b=100:16e6,16e6,32p,8e6,16c6,8e6,8g6,8p,8g,8p,8c6,16p,8g,16p,8e,16p,8a,8b,16a#,8a,16g.,16e6,16g6,8a6,16f6,8g6,8e6,16c6,16d6,8b,16p,8c6,16p,8g,16p,8e,16p,8a,8b,16a#,8a,16g.,16e6,16g6,8a6,16f6,8g6,8e6,16c6,16d6,8b,8p,16g6,16f#6,16f6,16d#6,16p,16e6,16p,16g#,16a,16c6,16p,16a,16c6,16d6,8p,16g6,16f#6,16f6,16d#6,16p,16e6,16p,16c7,16p,16c7,16c7,p,16g6,16f#6,16f6,16d#6,16p,16e6,16p,16g#,16a,16c6,16p,16a,16c6,16d6,8p,16d#6,8p,16d6,8p,16c6'
+  - platform: template
+    name: "Test"
+    on_press:
+      then:
+        - logger.log: Button Pressed
+        - rtttl.play: 'siren:d=8,o=5,b=100:d,e,d,e,d,e,d,e'
+  - platform: template
+    name: "Wecker"
+    on_press:
+      then:
+        - logger.log: Button Pressed
+        - rtttl.play: 'alarm:d=2,o=5,b=100:f,4p,f,4p,f,4p,f,4p,f,4p,f,4p,f,4p,f,4p'
+  - platform: template
+    name: "Stop"
+    on_press:
+      then:
+        - rtttl.stop
+        - media_player.stop
+
+
+output:
+  - platform: ledc
+    pin: GPIO13
+    id: rtttl_out
+  - platform: ledc
+    pin: GPIO14
+    id: gpio4
+    inverted: True
+
+rtttl:
+  output: rtttl_out
+
+i2s_audio:
+  i2s_lrclk_pin: GPIO17
+  i2s_bclk_pin: GPIO16
+
+media_player:
+  - platform: i2s_audio
+    name: "Media Player"
+    dac_type: external
+    i2s_dout_pin: GPIO4
+    mode: mono
+
+#Display
+
+color:
+  - id: my_red
+    red: 100%
+    green: 0%
+    blue: 0%
+  - id: my_yellow
+    red: 100%
+    green: 100%
+    blue: 0%
+  - id: my_green
+    red: 0%
+    green: 100%
+    blue: 0%
+  - id: my_blue
+    red: 0%
+    green: 0%
+    blue: 100%
+  - id: my_gray
+    red: 50%
+    green: 50%
+    blue: 50%
+  - id: bg_blue
+    red: 53%
+    green: 81%
+    blue: 92%
+  - id: bg_grey
+    red: 12%
+    green: 18%
+    blue: 20%
+
+font:
+  - file: "Helvetica.ttf"
+    id: helvetica_48
+    size: 48
+  - file: "Helvetica.ttf"
+    id: helvetica_32
+    size: 32
+  - file: "Helvetica.ttf"
+    id: helvetica_24
+    size: 24
+  - file: "Helvetica.ttf"
+    id: helvetica_12
+    size: 12
+
+light:
+  - platform: monochromatic
+    output: gpio4
+    name: "Backlight"
+  - platform: neopixelbus
+    id: pixel_strip
+    variant: WS2812
+    pin: GPIO23
+    num_leds: 24
+    name: "Pixel Strip"
+    method:
+      type: esp32_rmt
+      channel: 1
+    effects:
+      - pulse:
+          name: "Fast Pulse"
+          transition_length: 0.5s
+          update_interval: 0.5s
+          min_brightness: 0%
+          max_brightness: 100%
+      - addressable_rainbow:
+          name: "Rainbow"
+          width: 24
+  - platform: neopixelbus
+    id: pixel_feet
+    variant: APA106
+    pin: GPIO22
+    num_leds: 4
+    name: "Pixel Füße"
+    method:
+      type: esp32_rmt
+      channel: 0
+    effects:
+      - pulse:
+          name: "Fast Pulsea"
+          transition_length: 0.5s
+          update_interval: 0.5s
+          min_brightness: 0%
+          max_brightness: 100%
+
+image:
+  - file: "clear_day.jpg"
+    id: clear_day
+    type: RGB565
+  - file: "cloudy_day.jpg"
+    id: cloudy_day
+    type: RGB565
+  - file: "rain_day.jpg"
+    id: rainy_day
+    type: RGB565
+
+  - file: "clear_night.jpg"
+    id: clear_night
+    type: RGB565
+  - file: "cloudy_night.jpg"
+    id: cloudy_night
+    type: RGB565
+  - file: "rain_night.jpg"
+    id: rainy_night
+    type: RGB565
+
+time:
+  - platform: homeassistant
+    id: esptime
+
+spi:
+  clk_pin: GPIO33 #SCL
+  mosi_pin: GPIO32 #SDA
+
+display:
+  - platform: st7789v
+    id: minidisplay
+    model: Adafruit Funhouse 240x240
+    backlight_pin: GPIO14
+    cs_pin: GPIO25
+    dc_pin: GPIO26
+    reset_pin: GPIO27
+    rotation: 270
+    eightbitcolor: True
+    pages:
+      - id: main_page
+        lambda: |-
+          if (id(sun).state == "above_horizon") {
+            it.fill(id(bg_blue));
+            if (id(forecast).state == "sunny"){
+              it.image(120, 5, id(clear_day));
+            } else if (id(forecast).state == "partlycloudy" or id(forecast).state == "cloudy"){
+              it.image(120, 5, id(cloudy_day));
+            } else if (id(forecast).state == "rainy"){
+              it.image(120, 5, id(rainy_day));
+            } else{
+
+            }
+
+          } else {
+            it.fill(id(bg_grey));
+            if (id(forecast).state == "sunny"){
+              it.image(120, 5, id(clear_night));
+            } else if (id(forecast).state == "partlycloudy" or id(forecast).state == "cloudy"){
+              it.image(120, 5, id(cloudy_night));
+            } else if (id(forecast).state == "rainy"){
+              it.image(120, 5, id(rainy_night));
+            } else{
+
+            }
+          }
+
+
+          //#Time
+          it.strftime(5, 48, id(helvetica_24), id(my_gray), TextAlign::CENTER_LEFT, "%d.%m.%Y", id(esptime).now());
+          it.strftime(5, 90, id(helvetica_48), id(my_gray), TextAlign::CENTER_LEFT, "%H:%M", id(esptime).now());
+          //#Climate
+          it.printf(177, 63, id(helvetica_48), id(my_red), TextAlign::CENTER, "%.0f°", id(forecast_temperature).state);
+          it.printf(5, 235, id(helvetica_12), id(my_gray), TextAlign::BOTTOM_LEFT, "Raumklima: %.1f°C, %.0f%%", id(room_temperature).state, id(room_humidity).state);
+          it.printf(5, 215, id(helvetica_12), id(my_gray), TextAlign::BOTTOM_LEFT, "Helligkeit: %.2fV", id(foto_resistor).state);
+          //#Test
+          //it.printf(5, 140, id(helvetica_24), id(my_red), TextAlign::TOP_LEFT, id(sun).state.c_str());
+          //it.printf(5, 170, id(helvetica_24), id(my_red), TextAlign::TOP_LEFT, id(forecast).state.c_str());
