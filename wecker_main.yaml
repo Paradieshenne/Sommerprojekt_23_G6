@@ -33,7 +33,7 @@ sensor:
       id: room_humidity
     update_interval: 30s
     model: DHT11
-#initialize analog input for foto ressistor
+#initialize analog input for foto resistor
   - platform: adc
     id: foto_resistor
     name: "Fotowiederstand"
@@ -240,24 +240,24 @@ light:
           min_brightness: 0%
           max_brightness: 100%
 #load images from directory
-image:
-  - file: "clear_day.jpg"
+image:                       
+  - file: "clear_day.jpg"     
     id: clear_day
     type: RGB565
-  - file: "cloudy_day.jpg"
+  - file: "cloudy_day.jpg"    
     id: cloudy_day
     type: RGB565
-  - file: "rain_day.jpg"
+  - file: "rain_day.jpg"      
     id: rainy_day
     type: RGB565
 
-  - file: "clear_night.jpg"
-    id: clear_night
+  - file: "clear_night.jpg"   
+    id: clear_night        
     type: RGB565
-  - file: "cloudy_night.jpg"
+  - file: "cloudy_night.jpg"  
     id: cloudy_night
     type: RGB565
-  - file: "rain_night.jpg"
+  - file: "rain_night.jpg"    
     id: rainy_night
     type: RGB565
 #import time from home assistant
@@ -284,15 +284,15 @@ display:
     pages:                              
       - id: main_page                   #create main display view
         lambda: |-                      #render display content with lambda engine
-          if (id(sun).state == "above_horizon") {                                                     //#fill background blue if sun is above horizon
+          if (id(sun).state == "above_horizon") {                                                     #fill background blue if sun is above horizon
             it.fill(id(bg_blue)); 
-            if (id(forecast).state == "sunny"){                                                       //#render sunny image if weather is sunny
+            if (id(forecast).state == "sunny"){                                                       #render sunny image if weather is sunny
               it.image(120, 5, id(clear_day));
-            } else if (id(forecast).state == "partlycloudy" or id(forecast).state == "cloudy"){       //#render cloudy image if weather is partly cloudy or fully cloudy
+            } else if (id(forecast).state == "partlycloudy" or id(forecast).state == "cloudy"){       #render cloudy image if weather is partly cloudy or fully cloudy
               it.image(120, 5, id(cloudy_day));
-            } else if (id(forecast).state == "rainy"){                                                //#render rainy image if weather is rainy
+            } else if (id(forecast).state == "rainy"){                                                #render rainy image if weather is rainy
               it.image(120, 5, id(rainy_day));
-            } else{                                                                                   //#render no image if weather is not matched
+            } else{                                                                                   #render no image if weather is not matched
 
             }
 
@@ -310,13 +310,13 @@ display:
           }
 
 
-          //#Time
-          it.strftime(5, 48, id(helvetica_24), id(my_gray), TextAlign::CENTER_LEFT, "%d.%m.%Y", id(esptime).now());         //#render date (day, month, year)
-          it.strftime(5, 90, id(helvetica_48), id(my_gray), TextAlign::CENTER_LEFT, "%H:%M", id(esptime).now());            //#render 
-          //#Climate 
-          it.printf(177, 63, id(helvetica_48), id(my_red), TextAlign::CENTER, "%.0f°", id(forecast_temperature).state);     //#render forecast temperature
-          it.printf(5, 235, id(helvetica_12), id(my_gray), TextAlign::BOTTOM_LEFT, "Raumklima: %.1f°C, %.0f%%", id(room_temperature).state, id(room_humidity).state);   //#render room temperature and humidity
-          it.printf(5, 215, id(helvetica_12), id(my_gray), TextAlign::BOTTOM_LEFT, "Helligkeit: %.2fV", id(foto_resistor).state);                                       //#render room brightness (debugging only)
-          //#Test
-          //it.printf(5, 140, id(helvetica_24), id(my_red), TextAlign::TOP_LEFT, id(sun).state.c_str());                                  //#render sun postion (debug only)
-          //it.printf(5, 170, id(helvetica_24), id(my_red), TextAlign::TOP_LEFT, id(forecast).state.c_str());                             //#render weather forecast (debug only)
+          #Time
+          it.strftime(5, 48, id(helvetica_24), id(my_gray), TextAlign::CENTER_LEFT, "%d.%m.%Y", id(esptime).now());         #render date (day, month, year)
+          it.strftime(5, 90, id(helvetica_48), id(my_gray), TextAlign::CENTER_LEFT, "%H:%M", id(esptime).now());            #render 
+          #Climate 
+          it.printf(177, 63, id(helvetica_48), id(my_red), TextAlign::CENTER, "%.0f°", id(forecast_temperature).state);     #render forecast temperature
+          it.printf(5, 235, id(helvetica_12), id(my_gray), TextAlign::BOTTOM_LEFT, "Raumklima: %.1f°C, %.0f%%", id(room_temperature).state, id(room_humidity).state);   #render room temperature and humidity
+          it.printf(5, 215, id(helvetica_12), id(my_gray), TextAlign::BOTTOM_LEFT, "Helligkeit: %.2fV", id(foto_resistor).state);                                       #render room brightness (debugging only)
+          #Test
+          //it.printf(5, 140, id(helvetica_24), id(my_red), TextAlign::TOP_LEFT, id(sun).state.c_str());                                  #render sun postion (debug only)
+          //it.printf(5, 170, id(helvetica_24), id(my_red), TextAlign::TOP_LEFT, id(forecast).state.c_str());                             #render weather forecast (debug only)
