@@ -86,26 +86,30 @@ switch:
           id: pixel_strip
       - rtttl.stop                #turn off piezo output
 
-
+#template UI triggers as placeholders for developement
 button:
+#play "Mario Theme" on the piezo (piezo output placeholder)
   - platform: template
     name: "Mario"
-    on_press:
+    on_press:                        #play sound on activation and push "Button pressed" to the log
       then:
-        - logger.log: Button Pressed
+        - logger.log: Button Pressed 
         - rtttl.play: 'mario:d=4,o=5,b=100:16e6,16e6,32p,8e6,16c6,8e6,8g6,8p,8g,8p,8c6,16p,8g,16p,8e,16p,8a,8b,16a#,8a,16g.,16e6,16g6,8a6,16f6,8g6,8e6,16c6,16d6,8b,16p,8c6,16p,8g,16p,8e,16p,8a,8b,16a#,8a,16g.,16e6,16g6,8a6,16f6,8g6,8e6,16c6,16d6,8b,8p,16g6,16f#6,16f6,16d#6,16p,16e6,16p,16g#,16a,16c6,16p,16a,16c6,16d6,8p,16g6,16f#6,16f6,16d#6,16p,16e6,16p,16c7,16p,16c7,16c7,p,16g6,16f#6,16f6,16d#6,16p,16e6,16p,16g#,16a,16c6,16p,16a,16c6,16d6,8p,16d#6,8p,16d6,8p,16c6'
+#play "siren" on the piezo (piezo output placeholder)
   - platform: template
     name: "Test"
     on_press:
       then:
         - logger.log: Button Pressed
         - rtttl.play: 'siren:d=8,o=5,b=100:d,e,d,e,d,e,d,e'
+#play "alarm sound" on the piezo (piezo output template)
   - platform: template
     name: "Wecker"
     on_press:
       then:
         - logger.log: Button Pressed
         - rtttl.play: 'alarm:d=2,o=5,b=100:f,4p,f,4p,f,4p,f,4p,f,4p,f,4p,f,4p,f,4p'
+#stop all audible output (placeholder to stop outputs)
   - platform: template
     name: "Stop"
     on_press:
@@ -113,32 +117,38 @@ button:
         - rtttl.stop
         - media_player.stop
 
-
+#initialize outputs
 output:
+#initialize PWM output for piezo
   - platform: ledc
     pin: GPIO13
     id: rtttl_out
+#initialize
   - platform: ledc
     pin: GPIO14
     id: gpio4
     inverted: True
 
+#initialize rtttl note-to-pwm converter
 rtttl:
-  output: rtttl_out
+  output: rtttl_out       #define PWM output for rtttl
 
+#initialize i2s audio chip
 i2s_audio:
-  i2s_lrclk_pin: GPIO17
-  i2s_bclk_pin: GPIO16
+  i2s_lrclk_pin: GPIO17   #define left-right-clock output
+  i2s_bclk_pin: GPIO16    #define bit-clock output
 
+#initialize media player for home assistant
 media_player:
-  - platform: i2s_audio
+  - platform: i2s_audio    #define i2s as output interface
     name: "Media Player"
     dac_type: external
-    i2s_dout_pin: GPIO4
+    i2s_dout_pin: GPIO4    #define i2s data output
     mode: mono
 
 #Display
 
+#define colors in RGB
 color:
   - id: my_red
     red: 100%
@@ -169,6 +179,7 @@ color:
     green: 18%
     blue: 20%
 
+#define fonts with size and font file
 font:
   - file: "Helvetica.ttf"
     id: helvetica_48
@@ -183,46 +194,52 @@ font:
     id: helvetica_12
     size: 12
 
+#initialize light outputs
 light:
+#define lightoutput for display backlight
   - platform: monochromatic
     output: gpio4
     name: "Backlight"
+#define light output for underbody LED's
   - platform: neopixelbus
     id: pixel_strip
-    variant: WS2812
-    pin: GPIO23
-    num_leds: 24
+    variant: WS2812                  #define LED chip type
+    pin: GPIO23                      #define output pin
+    num_leds: 24                     #define number of LED pixels
     name: "Pixel Strip"
-    method:
+    method:                          #define output interface (multiplexed to output pin)
       type: esp32_rmt
       channel: 1
     effects:
-      - pulse:
+#define led effects
+      - pulse:                      #define fast led pulse effect
           name: "Fast Pulse"
           transition_length: 0.5s
           update_interval: 0.5s
           min_brightness: 0%
           max_brightness: 100%
-      - addressable_rainbow:
+      - addressable_rainbow:        #define 24 pixel long color sweep
           name: "Rainbow"
           width: 24
+#define light output for feet-light's
   - platform: neopixelbus
     id: pixel_feet
-    variant: APA106
-    pin: GPIO22
-    num_leds: 4
+    variant: APA106                 #define LED chip type
+    pin: GPIO22                     #define output pin
+    num_leds: 4                     #define numner of LED pixels
     name: "Pixel Füße"
-    method:
+    method:                         #define output interface (multiplexed to output pin)
       type: esp32_rmt
       channel: 0
+#define led effect
     effects:
       - pulse:
-          name: "Fast Pulsea"
+          name: "Fast Pulse"       #define fast led pulse effect
           transition_length: 0.5s
           update_interval: 0.5s
           min_brightness: 0%
           max_brightness: 100%
-
+#load images from directory
 image:
   - file: "clear_day.jpg"
     id: clear_day
@@ -243,37 +260,39 @@ image:
   - file: "rain_night.jpg"
     id: rainy_night
     type: RGB565
-
+#import time from home assistant
 time:
   - platform: homeassistant
     id: esptime
 
+#initialize SPI interface
 spi:
-  clk_pin: GPIO33 #SCL
-  mosi_pin: GPIO32 #SDA
+  clk_pin: GPIO33 #SCL pin
+  mosi_pin: GPIO32 #SDA pin
 
+#initialize display
 display:
-  - platform: st7789v
+  - platform: st7789v                   #define display driver type
     id: minidisplay
-    model: Adafruit Funhouse 240x240
-    backlight_pin: GPIO14
-    cs_pin: GPIO25
-    dc_pin: GPIO26
-    reset_pin: GPIO27
-    rotation: 270
-    eightbitcolor: True
-    pages:
-      - id: main_page
-        lambda: |-
-          if (id(sun).state == "above_horizon") {
-            it.fill(id(bg_blue));
-            if (id(forecast).state == "sunny"){
+    model: Adafruit Funhouse 240x240    #define display type
+    backlight_pin: GPIO14               #define pin for backlight
+    cs_pin: GPIO25                      #define chip select output
+    dc_pin: GPIO26                      #define
+    reset_pin: GPIO27                   #define reset pin
+    rotation: 270                       #set display rotation to 270°
+    eightbitcolor: True                 #reduce color depth to 8-bit (memory constraints)
+    pages:                              
+      - id: main_page                   #create main display view
+        lambda: |-                      #render display content with lambda engine
+          if (id(sun).state == "above_horizon") {                                                     //#fill background blue if sun is above horizon
+            it.fill(id(bg_blue)); 
+            if (id(forecast).state == "sunny"){                                                       //#render sunny image if weather is sunny
               it.image(120, 5, id(clear_day));
-            } else if (id(forecast).state == "partlycloudy" or id(forecast).state == "cloudy"){
+            } else if (id(forecast).state == "partlycloudy" or id(forecast).state == "cloudy"){       //#render cloudy image if weather is partly cloudy or fully cloudy
               it.image(120, 5, id(cloudy_day));
-            } else if (id(forecast).state == "rainy"){
+            } else if (id(forecast).state == "rainy"){                                                //#render rainy image if weather is rainy
               it.image(120, 5, id(rainy_day));
-            } else{
+            } else{                                                                                   //#render no image if weather is not matched
 
             }
 
@@ -292,12 +311,12 @@ display:
 
 
           //#Time
-          it.strftime(5, 48, id(helvetica_24), id(my_gray), TextAlign::CENTER_LEFT, "%d.%m.%Y", id(esptime).now());
-          it.strftime(5, 90, id(helvetica_48), id(my_gray), TextAlign::CENTER_LEFT, "%H:%M", id(esptime).now());
-          //#Climate
-          it.printf(177, 63, id(helvetica_48), id(my_red), TextAlign::CENTER, "%.0f°", id(forecast_temperature).state);
-          it.printf(5, 235, id(helvetica_12), id(my_gray), TextAlign::BOTTOM_LEFT, "Raumklima: %.1f°C, %.0f%%", id(room_temperature).state, id(room_humidity).state);
-          it.printf(5, 215, id(helvetica_12), id(my_gray), TextAlign::BOTTOM_LEFT, "Helligkeit: %.2fV", id(foto_resistor).state);
+          it.strftime(5, 48, id(helvetica_24), id(my_gray), TextAlign::CENTER_LEFT, "%d.%m.%Y", id(esptime).now());         //#render date (day, month, year)
+          it.strftime(5, 90, id(helvetica_48), id(my_gray), TextAlign::CENTER_LEFT, "%H:%M", id(esptime).now());            //#render 
+          //#Climate 
+          it.printf(177, 63, id(helvetica_48), id(my_red), TextAlign::CENTER, "%.0f°", id(forecast_temperature).state);     //#render forecast temperature
+          it.printf(5, 235, id(helvetica_12), id(my_gray), TextAlign::BOTTOM_LEFT, "Raumklima: %.1f°C, %.0f%%", id(room_temperature).state, id(room_humidity).state);   //#render room temperature and humidity
+          it.printf(5, 215, id(helvetica_12), id(my_gray), TextAlign::BOTTOM_LEFT, "Helligkeit: %.2fV", id(foto_resistor).state);                                       //#render room brightness (debugging only)
           //#Test
-          //it.printf(5, 140, id(helvetica_24), id(my_red), TextAlign::TOP_LEFT, id(sun).state.c_str());
-          //it.printf(5, 170, id(helvetica_24), id(my_red), TextAlign::TOP_LEFT, id(forecast).state.c_str());
+          //it.printf(5, 140, id(helvetica_24), id(my_red), TextAlign::TOP_LEFT, id(sun).state.c_str());                                  //#render sun postion (debug only)
+          //it.printf(5, 170, id(helvetica_24), id(my_red), TextAlign::TOP_LEFT, id(forecast).state.c_str());                             //#render weather forecast (debug only)
